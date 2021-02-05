@@ -87,7 +87,7 @@ export class Stream extends EventEmitter {
 
         const byteLength = ((this.sampleRate * this.bitsPerSample) / 8 / 100) * this.channelCount;
 
-        if (!this._paused && !this._finished && (this.cache.length >= byteLength || this._finishedLoading)) {
+        if (!this._paused && !this._finished && (this.cache.length >= byteLength * 5 || this._finishedLoading)) {
             const buffer = this.cache.slice(0, byteLength);
             const samples = new Int16Array(new Uint8Array(buffer).buffer);
 
