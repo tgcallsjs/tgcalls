@@ -18,6 +18,6 @@
         "includeVersion": true,
         "name": "tgcallsjs",
         "out": "docs/",
-        "readme": "README.md"
+        "readme": "none"
     }
 }
