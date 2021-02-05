@@ -12,5 +12,12 @@
         "noFallthroughCasesInSwitch": true,
         "forceConsistentCasingInFileNames": true,
         "typeRoots": ["src/typings", "node_modules/@types"]
+    },
+    "typedocOptions": {
+        "excludePrivate": true,
+        "includeVersion": true,
+        "name": "tgcallsjs",
+        "out": "docs/",
+        "readme": "README.md"
     }
 }
