@@ -1,0 +1,16 @@
+{
+    "include": ["src/"],
+    "compilerOptions": {
+        "target": "ES2019",
+        "module": "commonjs",
+        "declaration": true,
+        "outDir": "lib/",
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "forceConsistentCasingInFileNames": true,
+        "typeRoots": ["src/typings", "node_modules/@types"]
+    }
+}
