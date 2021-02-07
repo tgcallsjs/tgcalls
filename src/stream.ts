@@ -93,13 +93,17 @@ export class Stream extends EventEmitter {
 
             this.cache = this.cache.slice(byteLength);
 
-            this.audioSource.onData({
-                bitsPerSample: this.bitsPerSample,
-                sampleRate: this.sampleRate,
-                channelCount: this.channelCount,
-                numberOfFrames: samples.length,
-                samples,
-            });
+            try {
+                this.audioSource.onData({
+                    bitsPerSample: this.bitsPerSample,
+                    sampleRate: this.sampleRate,
+                    channelCount: this.channelCount,
+                    numberOfFrames: samples.length,
+                    samples,
+                });
+            } catch (error) {
+                this.emit('error', error);
+            }
         }
 
         if (!this._finished && this._finishedLoading && this.cache.length < byteLength) {
