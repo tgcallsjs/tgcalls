@@ -9,12 +9,14 @@ export class Stream extends EventEmitter {
     private _finished = true;
     private _stopped = false;
     private _finishedLoading = false;
+    private _emittedAlmostFinished = false;
 
     constructor(
         readable?: Readable,
         readonly bitsPerSample = 16,
         readonly sampleRate = 65000,
         readonly channelCount = 1,
+        private almostFinishedTrigger = 20,
     ) {
         super();
 
@@ -35,6 +37,7 @@ export class Stream extends EventEmitter {
         if (readable) {
             this._finished = false;
             this._finishedLoading = false;
+            this._emittedAlmostFinished = false;
 
             readable.on('data', data => {
                 this.cache = Buffer.concat([this.cache, data]);
@@ -106,9 +109,17 @@ export class Stream extends EventEmitter {
             }
         }
 
-        if (!this._finished && this._finishedLoading && this.cache.length < byteLength) {
-            this.finish();
-            this.emit('finish');
+        if (!this._finished && this._finishedLoading) {
+            if (
+                !this._emittedAlmostFinished &&
+                this.cache.length < byteLength + this.almostFinishedTrigger * this.sampleRate
+            ) {
+                this._emittedAlmostFinished = true;
+                this.emit('almost-finished');
+            } else if (this.cache.length < byteLength) {
+                this.finish();
+                this.emit('finish');
+            }
         }
 
         setTimeout(() => this.processData(), 10);
