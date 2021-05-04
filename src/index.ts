@@ -54,15 +54,23 @@ export class TGCalls<T> extends EventEmitter {
             return;
         }
 
-        const { transport } = await this.joinVoiceCall({
-            ufrag,
-            pwd,
-            hash,
-            setup: 'active',
-            fingerprint,
-            source,
-            params: this.#params,
-        });
+        let transport;
+
+        try {
+            const joinVoiceCallResult = await this.joinVoiceCall({
+                ufrag,
+                pwd,
+                hash,
+                setup: "active",
+                fingerprint,
+                source,
+                params: this.#params,
+            });
+            transport = joinVoiceCallResult.transport;
+        } catch (error) {
+            this.close();
+            throw error;
+        }
 
         if (!transport) {
             this.close();
