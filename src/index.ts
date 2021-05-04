@@ -54,17 +54,24 @@ export class TGCalls<T> extends EventEmitter {
             return;
         }
 
-        const { transport } = await this.joinVoiceCall({
-            ufrag,
-            pwd,
-            hash,
-            setup: 'active',
-            fingerprint,
-            source,
-            params: this.#params,
-        });
+        let joinVoiceCallResult;
 
-        if (!transport) {
+        try {
+            joinVoiceCallResult = await this.joinVoiceCall({
+                ufrag,
+                pwd,
+                hash,
+                setup: 'active',
+                fingerprint,
+                source,
+                params: this.#params,
+            });
+        } catch (error) {
+            this.close();
+            throw error;
+        }
+
+        if (!joinVoiceCallResult || !joinVoiceCallResult.transport) {
             this.close();
             throw new Error('No transport found');
         }
@@ -72,7 +79,7 @@ export class TGCalls<T> extends EventEmitter {
         const sessionId = Date.now();
         const conference = {
             sessionId,
-            transport,
+            transport: joinVoiceCallResult.transport,
             ssrcs: [{ ssrc: source, isMain: true }],
         };
 
