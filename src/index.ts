@@ -61,7 +61,7 @@ export class TGCalls<T> extends EventEmitter {
                 ufrag,
                 pwd,
                 hash,
-                setup: "active",
+                setup: 'active',
                 fingerprint,
                 source,
                 params: this.#params,
