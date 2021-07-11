@@ -64,6 +64,7 @@ export class Stream extends EventEmitter {
 
     finish() {
         this._finished = true;
+        this.emit('finish');
     }
 
     get finished() {
@@ -118,7 +119,6 @@ export class Stream extends EventEmitter {
                 this.emit('almost-finished');
             } else if (this.cache.length < byteLength) {
                 this.finish();
-                this.emit('finish');
             }
         }
 
