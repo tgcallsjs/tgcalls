@@ -86,11 +86,13 @@ export class Stream extends EventEmitter {
         return this.audioSource.createTrack();
     }
 
-    dataListener = ((data: any) => {
+    private dataListener = ((data: any) => {
         this.cache = Buffer.concat([this.cache, data]);
     }).bind(this);
 
-    endListener = (() => (this._finishedLoading = true)).bind(this);
+    private endListener = (() => {
+        this._finishedLoading = true;
+    }).bind(this);
 
     private processData() {
         if (this._stopped) {
