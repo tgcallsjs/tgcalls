@@ -11,8 +11,6 @@ export class Stream extends EventEmitter {
     private _stopped = false;
     private _finishedLoading = false;
     private _emittedAlmostFinished = false;
-    private dataListener?: (data: any) => void;
-    private endListener?: () => void;
 
     constructor(
         readable?: Readable,
@@ -36,8 +34,8 @@ export class Stream extends EventEmitter {
         }
 
         if (this.readable) {
-            this.readable.removeListener('data', this.getDataListener());
-            this.readable.removeListener('end', this.getEndListener());
+            this.readable.removeListener('data', this.dataListener);
+            this.readable.removeListener('end', this.endListener);
         }
 
         this.cache = Buffer.alloc(0);
@@ -48,8 +46,8 @@ export class Stream extends EventEmitter {
             this._emittedAlmostFinished = false;
             this.readable = readable;
 
-            this.readable.addListener('data', this.getDataListener());
-            this.readable.addListener('end', this.getEndListener());
+            this.readable.addListener('data', this.dataListener);
+            this.readable.addListener('end', this.endListener);
         }
     }
 
@@ -88,27 +86,11 @@ export class Stream extends EventEmitter {
         return this.audioSource.createTrack();
     }
 
-    private getDataListener() {
-        if (this.dataListener) {
-            return this.dataListener;
-        }
+    dataListener = ((data: any) => {
+        this.cache = Buffer.concat([this.cache, data]);
+    }).bind(this);
 
-        this.dataListener = ((data: any) => {
-            this.cache = Buffer.concat([this.cache, data]);
-        }).bind(this);
-        return this.dataListener;
-    }
-
-    private getEndListener() {
-        if (this.endListener) {
-            return this.endListener;
-        }
-
-        this.endListener = (() => {
-            this._finishedLoading = true;
-        }).bind(this);
-        return this.endListener;
-    }
+    endListener = (() => (this._finishedLoading = true)).bind(this);
 
     private processData() {
         if (this._stopped) {
