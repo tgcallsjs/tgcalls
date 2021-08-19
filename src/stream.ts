@@ -4,12 +4,15 @@ import { RTCAudioSource, nonstandard } from 'wrtc';
 
 export class Stream extends EventEmitter {
     private readonly audioSource: RTCAudioSource;
+    private readable?: Readable;
     private cache: Buffer;
     private _paused = false;
     private _finished = true;
     private _stopped = false;
     private _finishedLoading = false;
     private _emittedAlmostFinished = false;
+    private dataListener?: (data:any)=>void;
+    private endListener?: ()=>void;
 
     constructor(
         readable?: Readable,
@@ -32,20 +35,21 @@ export class Stream extends EventEmitter {
             throw new Error('Cannot set readable when stopped');
         }
 
+        if (this.readable) {
+            this.readable.removeListener('data', this.getDataListener());
+            this.readable.removeListener('end', this.getEndListener());
+        }
+
         this.cache = Buffer.alloc(0);
 
         if (readable) {
             this._finished = false;
             this._finishedLoading = false;
             this._emittedAlmostFinished = false;
+            this.readable = readable;
 
-            readable.on('data', data => {
-                this.cache = Buffer.concat([this.cache, data]);
-            });
-
-            readable.on('end', () => {
-                this._finishedLoading = true;
-            });
+            this.readable.addListener('data', this.getDataListener());
+            this.readable.addListener('end', this.getEndListener());
         }
     }
 
@@ -82,6 +86,28 @@ export class Stream extends EventEmitter {
 
     createTrack() {
         return this.audioSource.createTrack();
+    }
+    
+    private getDataListener() {
+        if (this.dataListener) {
+            return this.dataListener;
+        }
+
+        this.dataListener = ((data: any) => {
+            this.cache = Buffer.concat([this.cache, data])
+        }).bind(this);
+        return this.dataListener;
+    }
+
+    private getEndListener() {
+        if (this.endListener) {
+            return this.endListener
+        }
+
+        this.endListener = (() =>{
+        this._finishedLoading = true;
+        }).bind(this);
+        return this.endListener;
     }
 
     private processData() {
