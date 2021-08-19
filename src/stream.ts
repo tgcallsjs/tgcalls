@@ -11,8 +11,8 @@ export class Stream extends EventEmitter {
     private _stopped = false;
     private _finishedLoading = false;
     private _emittedAlmostFinished = false;
-    private dataListener?: (data:any)=>void;
-    private endListener?: ()=>void;
+    private dataListener?: (data: any) => void;
+    private endListener?: () => void;
 
     constructor(
         readable?: Readable,
@@ -87,25 +87,25 @@ export class Stream extends EventEmitter {
     createTrack() {
         return this.audioSource.createTrack();
     }
-    
+
     private getDataListener() {
         if (this.dataListener) {
             return this.dataListener;
         }
 
         this.dataListener = ((data: any) => {
-            this.cache = Buffer.concat([this.cache, data])
+            this.cache = Buffer.concat([this.cache, data]);
         }).bind(this);
         return this.dataListener;
     }
 
     private getEndListener() {
         if (this.endListener) {
-            return this.endListener
+            return this.endListener;
         }
 
-        this.endListener = (() =>{
-        this._finishedLoading = true;
+        this.endListener = (() => {
+            this._finishedLoading = true;
         }).bind(this);
         return this.endListener;
     }
@@ -115,9 +115,15 @@ export class Stream extends EventEmitter {
             return;
         }
 
-        const byteLength = ((this.sampleRate * this.bitsPerSample) / 8 / 100) * this.channelCount;
+        const byteLength =
+            ((this.sampleRate * this.bitsPerSample) / 8 / 100) *
+            this.channelCount;
 
-        if (!this._paused && !this._finished && (this.cache.length >= byteLength || this._finishedLoading)) {
+        if (
+            !this._paused &&
+            !this._finished &&
+            (this.cache.length >= byteLength || this._finishedLoading)
+        ) {
             const buffer = this.cache.slice(0, byteLength);
             const samples = new Int16Array(new Uint8Array(buffer).buffer);
 
@@ -139,7 +145,8 @@ export class Stream extends EventEmitter {
         if (!this._finished && this._finishedLoading) {
             if (
                 !this._emittedAlmostFinished &&
-                this.cache.length < byteLength + this.almostFinishedTrigger * this.sampleRate
+                this.cache.length <
+                    byteLength + this.almostFinishedTrigger * this.sampleRate
             ) {
                 this._emittedAlmostFinished = true;
                 this.emit('almost-finished');
