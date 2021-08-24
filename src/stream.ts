@@ -4,6 +4,7 @@ import { RTCAudioSource, nonstandard } from 'wrtc';
 
 export class Stream extends EventEmitter {
     private readonly audioSource: RTCAudioSource;
+    private readable?: Readable;
     private cache: Buffer;
     private _paused = false;
     private _finished = true;
@@ -32,20 +33,21 @@ export class Stream extends EventEmitter {
             throw new Error('Cannot set readable when stopped');
         }
 
+        if (this.readable) {
+            this.readable.removeListener('data', this.dataListener);
+            this.readable.removeListener('end', this.endListener);
+        }
+
         this.cache = Buffer.alloc(0);
 
         if (readable) {
             this._finished = false;
             this._finishedLoading = false;
             this._emittedAlmostFinished = false;
+            this.readable = readable;
 
-            readable.on('data', data => {
-                this.cache = Buffer.concat([this.cache, data]);
-            });
-
-            readable.on('end', () => {
-                this._finishedLoading = true;
-            });
+            this.readable.addListener('data', this.dataListener);
+            this.readable.addListener('end', this.endListener);
         }
     }
 
@@ -84,14 +86,28 @@ export class Stream extends EventEmitter {
         return this.audioSource.createTrack();
     }
 
+    private dataListener = ((data: any) => {
+        this.cache = Buffer.concat([this.cache, data]);
+    }).bind(this);
+
+    private endListener = (() => {
+        this._finishedLoading = true;
+    }).bind(this);
+
     private processData() {
         if (this._stopped) {
             return;
         }
 
-        const byteLength = ((this.sampleRate * this.bitsPerSample) / 8 / 100) * this.channelCount;
+        const byteLength =
+            ((this.sampleRate * this.bitsPerSample) / 8 / 100) *
+            this.channelCount;
 
-        if (!this._paused && !this._finished && (this.cache.length >= byteLength || this._finishedLoading)) {
+        if (
+            !this._paused &&
+            !this._finished &&
+            (this.cache.length >= byteLength || this._finishedLoading)
+        ) {
             const buffer = this.cache.slice(0, byteLength);
             const samples = new Int16Array(new Uint8Array(buffer).buffer);
 
@@ -113,7 +129,8 @@ export class Stream extends EventEmitter {
         if (!this._finished && this._finishedLoading) {
             if (
                 !this._emittedAlmostFinished &&
-                this.cache.length < byteLength + this.almostFinishedTrigger * this.sampleRate
+                this.cache.length <
+                    byteLength + this.almostFinishedTrigger * this.sampleRate
             ) {
                 this._emittedAlmostFinished = true;
                 this.emit('almost-finished');
