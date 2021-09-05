@@ -6,7 +6,7 @@
   "scripts": {
     "build": "npm run prepare",
     "test": "tsc --noEmit",
-    "prepare": "rm -rf lib/ && tsc",
+    "prepare": "tsc",
     "preversion": "npm run test",
     "docs": "typedoc src/index.ts"
   },
