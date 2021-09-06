@@ -26,26 +26,26 @@ export class Stream extends EventEmitter {
     public width: number = 640;
     public height: number = 360;
     readonly framerate: number = 24;
-    readonly bitsPerSample: number;
-    readonly sampleRate: number;
-    readonly channelCount: number;
-    private almostFinishedTrigger: number;
+    readonly bitsPerSample: number = 16;
+    readonly sampleRate: number = 65000;
+    readonly channelCount: number = 1;
+    private almostFinishedTrigger: number = 20;
 
     constructor(readable?: Readable, options?: StreamOptions) {
         super();
 
-        if (typeof options?.video === 'boolean') {
-            this.video = options?.video ?? true;
-        } else if (options?.video) {
-            this.width = options.video.width ?? this.width;
-            this.height = options.video.height ?? this.height;
-            this.framerate = options.video.framerate ?? this.framerate;
-        }
+        this.video = options?.video ?? this.video;
 
-        this.bitsPerSample = options?.audio?.bitsPerSample ?? 16;
-        this.sampleRate = options?.audio?.sampleRate ?? 65000;
-        this.channelCount = options?.audio?.channelCount ?? 1;
-        this.almostFinishedTrigger = options?.almostFinishedTrigger ?? 20;
+        this.width = options?.width ?? this.width;
+        this.height = options?.height ?? this.height;
+        this.framerate = options?.framerate ?? this.framerate;
+
+        this.bitsPerSample = options?.bitsPerSample ?? this.bitsPerSample;
+        this.sampleRate = options?.sampleRate ?? this.sampleRate;
+        this.channelCount = options?.channelCount ?? this.channelCount;
+
+        this.almostFinishedTrigger =
+            options?.almostFinishedTrigger ?? this.almostFinishedTrigger;
 
         this.audioSource = new nonstandard.RTCAudioSource();
         this.videoSource = new nonstandard.RTCVideoSource();

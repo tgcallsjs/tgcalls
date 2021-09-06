@@ -1,20 +1,20 @@
-export interface StreamVideoOptions {
+export interface VideoStreamOptions {
     width?: number;
     height?: number;
     framerate?: number;
 }
 
-export interface StreamAudioOptions {
+export interface AudioStreamOptions {
     bitsPerSample?: number;
     sampleRate?: number;
     channelCount?: number;
 }
 
-export interface StreamOptions {
-    audio?: StreamAudioOptions;
-    video?: StreamVideoOptions | true;
-    almostFinishedTrigger?: number;
-}
+export type StreamOptions = VideoStreamOptions &
+    AudioStreamOptions & {
+        video?: boolean;
+        almostFinishedTrigger?: number;
+    };
 
 export interface Fingerprint {
     hash: string;
