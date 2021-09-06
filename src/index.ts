@@ -3,8 +3,9 @@ import { RTCPeerConnection } from 'wrtc';
 import { SdpBuilder } from './sdp-builder';
 import { parseSdp } from './utils';
 import { JoinVoiceCallCallback } from './types';
+import { Stream } from './stream';
 
-export { Stream } from './stream';
+export { Stream };
 
 export class TGCalls<T> extends EventEmitter {
     #connection?: RTCPeerConnection;
@@ -17,16 +18,24 @@ export class TGCalls<T> extends EventEmitter {
         this.#params = params;
     }
 
-    async start(track: MediaStreamTrack): Promise<void> {
+    async start(
+        audio: MediaStreamTrack,
+        video: MediaStreamTrack,
+    ): Promise<void> {
         if (this.#connection) {
             throw new Error('Connection already started');
         } else if (!this.joinVoiceCall) {
-            throw new Error('Please set the `joinVoiceCall` callback before calling `start()`');
+            throw new Error(
+                'Please set the `joinVoiceCall` callback before calling `start()`',
+            );
         }
 
         this.#connection = new RTCPeerConnection();
         this.#connection.oniceconnectionstatechange = async () => {
-            this.emit('iceConnectionState', this.#connection?.iceConnectionState);
+            this.emit(
+                'iceConnectionState',
+                this.#connection?.iceConnectionState,
+            );
 
             switch (this.#connection?.iceConnectionState) {
                 case 'closed':
@@ -36,10 +45,11 @@ export class TGCalls<T> extends EventEmitter {
             }
         };
 
-        this.#connection.addTrack(track);
+        this.#connection.addTrack(audio);
+        this.#connection.addTrack(video);
 
         const offer = await this.#connection.createOffer({
-            offerToReceiveVideo: false,
+            offerToReceiveVideo: true,
             offerToReceiveAudio: true,
         });
 
@@ -49,8 +59,18 @@ export class TGCalls<T> extends EventEmitter {
             return;
         }
 
-        const { ufrag, pwd, hash, fingerprint, source } = parseSdp(offer.sdp);
-        if (!ufrag || !pwd || !hash || !fingerprint || !source) {
+        const { ufrag, pwd, hash, fingerprint, source, sourceGroup } = parseSdp(
+            offer.sdp,
+        );
+
+        if (
+            !ufrag ||
+            !pwd ||
+            !hash ||
+            !fingerprint ||
+            !source ||
+            !sourceGroup
+        ) {
             return;
         }
 
@@ -64,6 +84,7 @@ export class TGCalls<T> extends EventEmitter {
                 setup: 'active',
                 fingerprint,
                 source,
+                sourceGroup,
                 params: this.#params,
             });
         } catch (error) {
@@ -80,12 +101,12 @@ export class TGCalls<T> extends EventEmitter {
         const conference = {
             sessionId,
             transport: joinVoiceCallResult.transport,
-            ssrcs: [{ ssrc: source, isMain: true }],
+            ssrcs: [{ ssrc: source, ssrcGroup: sourceGroup }],
         };
 
         await this.#connection.setRemoteDescription({
             type: 'answer',
-            sdp: SdpBuilder.fromConference(conference, true),
+            sdp: SdpBuilder.fromConference(conference),
         });
     }
 

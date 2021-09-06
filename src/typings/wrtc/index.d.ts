@@ -22,7 +22,10 @@ declare module 'wrtc' {
 
     export const RTCDataChannelEvent: {
         prototype: RTCDataChannelEvent;
-        new (type: string, eventInitDict: RTCDataChannelEventInit): RTCDataChannelEvent;
+        new (
+            type: string,
+            eventInitDict: RTCDataChannelEventInit,
+        ): RTCDataChannelEvent;
     };
 
     export const RTCDtlsTransport: {
@@ -51,13 +54,18 @@ declare module 'wrtc' {
     export const RTCPeerConnection: {
         prototype: RTCPeerConnection;
         new (configuration?: ExtendedRTCConfiguration): RTCPeerConnection;
-        generateCertificate(keygenAlgorithm: AlgorithmIdentifier): Promise<RTCCertificate>;
+        generateCertificate(
+            keygenAlgorithm: AlgorithmIdentifier,
+        ): Promise<RTCCertificate>;
         getDefaultIceServers(): RTCIceServer[];
     };
 
     export const RTCPeerConnectionIceEvent: {
         prototype: RTCPeerConnectionIceEvent;
-        new (type: string, eventInitDict?: RTCPeerConnectionIceEventInit): RTCPeerConnectionIceEvent;
+        new (
+            type: string,
+            eventInitDict?: RTCPeerConnectionIceEventInit,
+        ): RTCPeerConnectionIceEvent;
     };
 
     export const RTCRtpReceiver: {
@@ -84,10 +92,14 @@ declare module 'wrtc' {
 
     export const RTCSessionDescription: {
         prototype: RTCSessionDescription;
-        new (descriptionInitDict?: RTCSessionDescriptionInit): RTCSessionDescription;
+        new (
+            descriptionInitDict?: RTCSessionDescriptionInit,
+        ): RTCSessionDescription;
     };
 
-    export const getUserMedia: (constraints?: MediaStreamConstraints) => Promise<MediaStream>;
+    export const getUserMedia: (
+        constraints?: MediaStreamConstraints,
+    ) => Promise<MediaStream>;
 
     export const mediaDevices: MediaDevices;
 
@@ -198,12 +210,28 @@ declare module 'wrtc' {
             new (track: MediaStreamTrack): RTCVideoSink;
         };
         i420ToRgba(
-            i420Frame: { width: number; height: number; data: Uint8ClampedArray },
-            rgbaFrame: { width: number; height: number; data: Uint8ClampedArray },
+            i420Frame: {
+                width: number;
+                height: number;
+                data: Uint8ClampedArray;
+            },
+            rgbaFrame: {
+                width: number;
+                height: number;
+                data: Uint8ClampedArray;
+            },
         ): void;
         rgbaToI420(
-            i420Frame: { width: number; height: number; data: Uint8ClampedArray },
-            rgbaFrame: { width: number; height: number; data: Uint8ClampedArray },
+            i420Frame: {
+                width: number;
+                height: number;
+                data: Uint8ClampedArray;
+            },
+            rgbaFrame: {
+                width: number;
+                height: number;
+                data: Uint8ClampedArray;
+            },
         ): void;
     };
 }

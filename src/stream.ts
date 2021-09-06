@@ -1,9 +1,10 @@
 import { EventEmitter } from 'events';
 import { Readable } from 'stream';
-import { RTCAudioSource, nonstandard } from 'wrtc';
+import { RTCVideoSource, RTCAudioSource, nonstandard } from 'wrtc';
 
 export class Stream extends EventEmitter {
     private readonly audioSource: RTCAudioSource;
+    private readonly videoSource: RTCVideoSource;
     private readable?: Readable;
     private cache: Buffer;
     private _paused = false;
@@ -14,6 +15,10 @@ export class Stream extends EventEmitter {
 
     constructor(
         readable?: Readable,
+        readonly video = false,
+        public width = 640,
+        public height = 360,
+        readonly framerate = 24,
         readonly bitsPerSample = 16,
         readonly sampleRate = 65000,
         readonly channelCount = 1,
@@ -22,6 +27,7 @@ export class Stream extends EventEmitter {
         super();
 
         this.audioSource = new nonstandard.RTCAudioSource();
+        this.videoSource = new nonstandard.RTCVideoSource();
         this.cache = Buffer.alloc(0);
 
         this.setReadable(readable);
@@ -83,7 +89,9 @@ export class Stream extends EventEmitter {
     }
 
     createTrack() {
-        return this.audioSource.createTrack();
+        return this.video
+            ? this.videoSource.createTrack()
+            : this.audioSource.createTrack();
     }
 
     private dataListener = ((data: any) => {
@@ -99,9 +107,10 @@ export class Stream extends EventEmitter {
             return;
         }
 
-        const byteLength =
-            ((this.sampleRate * this.bitsPerSample) / 8 / 100) *
-            this.channelCount;
+        const byteLength = this.video
+            ? 1.5 * this.width * this.height
+            : ((this.sampleRate * this.bitsPerSample) / 8 / 100) *
+              this.channelCount;
 
         if (
             !this._paused &&
@@ -109,18 +118,27 @@ export class Stream extends EventEmitter {
             (this.cache.length >= byteLength || this._finishedLoading)
         ) {
             const buffer = this.cache.slice(0, byteLength);
-            const samples = new Int16Array(new Uint8Array(buffer).buffer);
-
             this.cache = this.cache.slice(byteLength);
 
             try {
-                this.audioSource.onData({
-                    bitsPerSample: this.bitsPerSample,
-                    sampleRate: this.sampleRate,
-                    channelCount: this.channelCount,
-                    numberOfFrames: samples.length,
-                    samples,
-                });
+                if (this.video) {
+                    this.videoSource.onFrame({
+                        data: new Uint8ClampedArray(buffer),
+                        width: this.width,
+                        height: this.height,
+                    });
+                } else {
+                    const samples = new Int16Array(
+                        new Uint8Array(buffer).buffer,
+                    );
+                    this.audioSource.onData({
+                        bitsPerSample: this.bitsPerSample,
+                        sampleRate: this.sampleRate,
+                        channelCount: this.channelCount,
+                        numberOfFrames: samples.length,
+                        samples,
+                    });
+                }
             } catch (error) {
                 this.emit('error', error);
             }
@@ -139,6 +157,9 @@ export class Stream extends EventEmitter {
             }
         }
 
-        setTimeout(() => this.processData(), 10);
+        setTimeout(
+            () => this.processData(),
+            this.video ? 1000 / this.framerate : 10,
+        );
     }
 }
