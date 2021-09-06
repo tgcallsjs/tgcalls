@@ -6,4 +6,4 @@ Big thanks to [@evgeny-nadymov] for allowing us to use their code from [telegram
 
 [@evgeny-nadymov]: https://github.com/evgeny-nadymov/
 [telegram-react]: https://github.com/evgeny-nadymov/telegram-react/
-[@Laky-64]: https://github.com/Laky-64/
+[@laky-64]: https://github.com/Laky-64/
