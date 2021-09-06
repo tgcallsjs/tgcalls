@@ -30,9 +30,8 @@ export interface Candidate {
 }
 
 export interface Ssrc {
-    isMain: boolean;
-    isRemoved?: boolean;
     ssrc: number;
+    ssrcGroup: number[];
 }
 
 export interface Sdp {
@@ -42,6 +41,7 @@ export interface Sdp {
     pwd: string | null;
     ufrag: string | null;
     source: number | null;
+    sourceGroup: number[] | null;
 }
 
 export interface JoinVoiceCallParams<T> {
@@ -51,6 +51,7 @@ export interface JoinVoiceCallParams<T> {
     setup: 'active';
     fingerprint: string;
     source: number;
+    sourceGroup: number[];
     params: T;
 }
 
@@ -58,4 +59,6 @@ export interface JoinVoiceCallResponse {
     transport: Transport | null;
 }
 
-export type JoinVoiceCallCallback<T> = (payload: JoinVoiceCallParams<T>) => Promise<JoinVoiceCallResponse>;
+export type JoinVoiceCallCallback<T> = (
+    payload: JoinVoiceCallParams<T>,
+) => Promise<JoinVoiceCallResponse>;
