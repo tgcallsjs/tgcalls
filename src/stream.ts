@@ -22,10 +22,10 @@ export class Stream extends EventEmitter {
     private _finishedLoading = false;
     private _emittedAlmostFinished = false;
 
-    readonly video: boolean;
-    public width: number;
-    public height: number;
-    readonly framerate: number;
+    readonly video: boolean = false;
+    public width: number = 640;
+    public height: number = 360;
+    readonly framerate: number = 24;
     readonly bitsPerSample: number;
     readonly sampleRate: number;
     readonly channelCount: number;
@@ -34,14 +34,17 @@ export class Stream extends EventEmitter {
     constructor(readable?: Readable, options?: StreamOptions) {
         super();
 
-        this.video = options?.video ?? true;
-        this.width = options?.width ?? 640;
-        this.height = options?.height ?? 360;
-        this.framerate = options?.framerate ?? 24;
+        if (typeof options?.video === 'boolean') {
+            this.video = options?.video ?? true;
+        } else if (options?.video) {
+            this.width = options.video.width ?? this.width;
+            this.height = options.video.height ?? this.height;
+            this.framerate = options.video.framerate ?? this.framerate;
+        }
 
-        this.bitsPerSample = options?.bitsPerSample ?? 16;
-        this.sampleRate = options?.sampleRate ?? 65000;
-        this.channelCount = options?.channelCount ?? 1;
+        this.bitsPerSample = options?.audio?.bitsPerSample ?? 16;
+        this.sampleRate = options?.audio?.sampleRate ?? 65000;
+        this.channelCount = options?.audio?.channelCount ?? 1;
         this.almostFinishedTrigger = options?.almostFinishedTrigger ?? 20;
 
         this.audioSource = new nonstandard.RTCAudioSource();
