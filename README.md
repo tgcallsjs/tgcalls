@@ -16,15 +16,16 @@ tgcalls.joinVoiceCall = payload => {
     return transport;
 };
 
-const stream = new Stream(createReadStream('song.raw'));
+const audioStream = new Stream(createReadStream('audio.raw'));
+const videoStream = new Stream(createReadStream('video.raw'));
 
 // See the docs for more event types
 // https://tgcallsjs.github.io/tgcalls/classes/stream.html#on
-stream.on('finish', () => {
-    console.log('Song finished');
+audioStream.on('finish', () => {
+    console.log('Audio finished streaming');
 });
 
-tgcalls.start(stream.createTrack());
+tgcalls.start(audioStream.createTrack(), videoStream.createTrack());
 ```
 
 ## Required media properties
