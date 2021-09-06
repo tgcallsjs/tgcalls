@@ -3,6 +3,14 @@ import { Readable } from 'stream';
 import { RTCVideoSource, RTCAudioSource, nonstandard } from 'wrtc';
 import { StreamOptions } from './types';
 
+export declare interface Stream {
+    on(event: 'pause', listener: (paused: boolean) => void): this;
+    on(event: 'finish', listener: () => void): this;
+    on(event: 'almost-finished', listener: () => void): this;
+    on(event: 'error', listener: (error: Error) => void): this;
+    on(event: string, listener: Function): this;
+}
+
 export class Stream extends EventEmitter {
     private readonly audioSource: RTCAudioSource;
     private readonly videoSource: RTCVideoSource;
