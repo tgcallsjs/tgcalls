@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events';
 import { Readable } from 'stream';
 import { RTCVideoSource, RTCAudioSource, nonstandard } from 'wrtc';
+import { StreamOptions } from './types';
 
 export class Stream extends EventEmitter {
     private readonly audioSource: RTCAudioSource;
@@ -13,18 +14,27 @@ export class Stream extends EventEmitter {
     private _finishedLoading = false;
     private _emittedAlmostFinished = false;
 
-    constructor(
-        readable?: Readable,
-        readonly video = false,
-        public width = 640,
-        public height = 360,
-        readonly framerate = 24,
-        readonly bitsPerSample = 16,
-        readonly sampleRate = 65000,
-        readonly channelCount = 1,
-        private almostFinishedTrigger = 20,
-    ) {
+    readonly video: boolean;
+    public width: number;
+    public height: number;
+    readonly framerate: number;
+    readonly bitsPerSample: number;
+    readonly sampleRate: number;
+    readonly channelCount: number;
+    private almostFinishedTrigger: number;
+
+    constructor(readable?: Readable, options?: StreamOptions) {
         super();
+
+        this.video = options?.video ?? true;
+        this.width = options?.width ?? 640;
+        this.height = options?.height ?? 360;
+        this.framerate = options?.framerate ?? 24;
+
+        this.bitsPerSample = options?.bitsPerSample ?? 16;
+        this.sampleRate = options?.sampleRate ?? 65000;
+        this.channelCount = options?.channelCount ?? 1;
+        this.almostFinishedTrigger = options?.almostFinishedTrigger ?? 20;
 
         this.audioSource = new nonstandard.RTCAudioSource();
         this.videoSource = new nonstandard.RTCVideoSource();
