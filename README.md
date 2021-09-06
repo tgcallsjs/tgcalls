@@ -1,6 +1,6 @@
 # tgcallsjs
 
-[![npm](https://img.shields.io/npm/v/tgcalls)][npm]
+[![npm](https://img.shields.io/npm/v/tgcalls)](https://npmjs.com/package/tgcalls) [![Mentioned in Awesome Telegram Calls](https://awesome.re/mentioned-badge.svg)](https://github.com/tgcalls/awesome-tgcalls)
 
 ## Example
 
@@ -26,6 +26,10 @@ stream.on('finish', () => {
 
 tgcalls.start(stream.createTrack());
 ```
+
+## Related projects
+
+- [gram-tgcalls](https://github.com/tgcallsjs/gram-tgcalls): connects tgcallsjs with [GramJS](https://github.com/gram-js/gramjs) and makes using this lib super easy.
 
 ## Credits
 
