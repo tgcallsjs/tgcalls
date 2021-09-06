@@ -27,6 +27,44 @@ stream.on('finish', () => {
 tgcalls.start(stream.createTrack());
 ```
 
+## Required media properties
+
+Video:
+
+- Format: yuv420p
+- Resolution: min 640x360, max 1280x720
+- FPS: 24 or what you provided in `StreamOptions`
+
+Audio:
+
+- Format: s16le
+- Channels: 2
+- Bitrate: 65K or what you provided in `StreamOptions`
+
+### Conversion with Ffmpeg
+
+Video:
+
+```bash
+ffmpeg -i [input] -f yuv420p -vf scale=640:-1 -r 24 [output]
+```
+
+Audio:
+
+```bash
+ffmpeg -i [input] -f s16le -ac 1 -ar 65K [output]
+```
+
+Or both from a video input:
+
+```bash
+ffmpeg -i [input] \
+ -f s16le -ac 1 -ar 65K [audio_output] \
+ -f yuv420p -vf scale=640:-1 -r 24 [video_output]
+```
+
+Note: these examples are using default values of configurable options.
+
 ## Related projects
 
 - [gram-tgcalls](https://github.com/tgcallsjs/gram-tgcalls): connects tgcallsjs with [GramJS](https://github.com/gram-js/gramjs) and makes using this lib super easy.
