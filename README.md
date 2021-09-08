@@ -17,7 +17,9 @@ tgcalls.joinVoiceCall = payload => {
 };
 
 const audioStream = new Stream(createReadStream('audio.raw'));
-const videoStream = new Stream(createReadStream('video.raw'));
+const videoStream = new Stream(createReadStream('video.raw'), {
+    video: true,
+});
 
 // See the docs for more event types
 // https://tgcallsjs.github.io/tgcalls/classes/stream.html#on
