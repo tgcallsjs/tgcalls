@@ -47,7 +47,7 @@ Audio:
 Video:
 
 ```bash
-ffmpeg -i [input] -f yuv420p -vf scale=640:-1 -r 24 [output]
+ffmpeg -i [input] -f rawvideo -vf scale=640:-1 -r 24 [output]
 ```
 
 Audio:
@@ -61,7 +61,7 @@ Or both from a video input:
 ```bash
 ffmpeg -i [input] \
     -f s16le -ac 1 -ar 65K [audio_output] \
-    -f yuv420p -vf scale=640:-1 -r 24 [video_output]
+    -f rawvideo -vf scale=640:-1 -r 24 [video_output]
 ```
 
 Note: these examples are using default values of configurable options.
