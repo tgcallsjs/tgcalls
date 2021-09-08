@@ -37,6 +37,7 @@ export class Stream extends EventEmitter {
         if (typeof options?.video === 'boolean') {
             this.video = options?.video ?? true;
         } else if (options?.video) {
+            this.video = true;
             this.width = options.video.width ?? this.width;
             this.height = options.video.height ?? this.height;
             this.framerate = options.video.framerate ?? this.framerate;
