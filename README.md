@@ -34,7 +34,7 @@ tgcalls.start(audioStream.createTrack(), videoStream.createTrack());
 
 Video:
 
--   Format: `yuv420p`
+-   Format: `rawvideo`
 -   Resolution: min 640x360, max 1280x720
 -   FPS: 24 or what you provided in `StreamOptions`
 
