@@ -86,7 +86,7 @@ export interface RemotePlayingTimeResponse {
 }
 
 export interface RemoteLaggingResponse {
-    isLagging: boolean;
+    lagging: boolean;
 }
 
 export type RemotePlayingTimeCallback = () => RemotePlayingTimeResponse;

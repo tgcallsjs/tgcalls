@@ -163,10 +163,7 @@ export class Stream extends EventEmitter {
                 if (time > remoteTime) {
                     this.lastDifference = (time - remoteTime) * 100000;
                     return true;
-                } else if (
-                    this.remoteLagging().isLagging &&
-                    remoteTime > time
-                ) {
+                } else if (this.remoteLagging().lagging && remoteTime > time) {
                     this.lastDifference = 0;
                     return true;
                 }
