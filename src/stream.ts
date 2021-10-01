@@ -44,6 +44,8 @@ export class Stream extends EventEmitter {
     remotePlayingTime?: RemotePlayingTimeCallback;
     remoteLagging?: RemoteLaggingCallback;
     private bindedProcess: CallableFunction;
+    private overflowCallback?: (pause: boolean) => void;
+
     constructor(readable?: Readable, options?: StreamOptions) {
         super();
 
@@ -178,7 +180,6 @@ export class Stream extends EventEmitter {
             return;
         }
         const lagging_remote = this.isLaggingRemote();
-        const checkLag = this.checkLag();
         const timeoutWait = this.frameTime() - this.lastDifferenceRemote;
         this.checkOverflow();
         setTimeout(this.bindedProcess, timeoutWait);
@@ -229,7 +230,7 @@ export class Stream extends EventEmitter {
             }
         }
     }
-    
+
     private checkOverflow() {
         if (this.cacheSize > this.byteLength * this.needed_time() * 50) {
             if (!this.readable!.isPaused()) {
@@ -248,7 +249,7 @@ export class Stream extends EventEmitter {
             this.readable!.resume();
         }
     }
-    
+
     public checkLag() {
         if (this._finishedLoading) {
             return false;
