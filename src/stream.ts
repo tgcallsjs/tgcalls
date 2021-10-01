@@ -180,6 +180,7 @@ export class Stream extends EventEmitter {
         const lagging_remote = this.isLaggingRemote();
         const checkLag = this.checkLag();
         const timeoutWait = this.frameTime() - this.lastDifferenceRemote;
+        this.checkOverflow();
         setTimeout(this.bindedProcess, timeoutWait);
         if (
             !this._paused &&
@@ -228,6 +229,26 @@ export class Stream extends EventEmitter {
             }
         }
     }
+    
+    private checkOverflow() {
+        if (this.cacheSize > this.byteLength * this.needed_time() * 50) {
+            if (!this.readable!.isPaused()) {
+                if (typeof this.overflowCallback === 'function') {
+                    this.overflowCallback(true);
+                }
+                this.readable!.pause();
+            }
+        } else if (
+            this.cacheSize < this.byteLength * this.needed_time() * 25 &&
+            this.readable!.isPaused()
+        ) {
+            if (typeof this.overflowCallback === 'function') {
+                this.overflowCallback(false);
+            }
+            this.readable!.resume();
+        }
+    }
+    
     public checkLag() {
         if (this._finishedLoading) {
             return false;
