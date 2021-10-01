@@ -21,14 +21,14 @@ export class Stream extends EventEmitter {
     private readonly videoSource: RTCVideoSource;
     private readable?: Readable;
 
-    private cacheArray: Buffer[];
+    private cache: Buffer[];
 
     private _paused = false;
     private _finished = true;
     private _stopped = false;
     private _finishedLoading = false;
     private _emittedAlmostFinished = false;
-    private lastDifferenceRemote = 0;
+    private lastDifference = 0;
     readonly video: boolean = false;
     public width: number = 640;
     public height: number = 360;
@@ -41,10 +41,9 @@ export class Stream extends EventEmitter {
     private cacheSize: number = 0;
     private playedBytes = 0;
     private chunk: Buffer;
-    remotePlayingTime?: RemotePlayingTimeCallback;
+    remoteTime?: RemotePlayingTimeCallback;
     remoteLagging?: RemoteLaggingCallback;
-    private bindedProcess: CallableFunction;
-    private overflowCallback?: (pause: boolean) => void;
+    overflowCallback?: (pause: boolean) => void;
 
     constructor(readable?: Readable, options?: StreamOptions) {
         super();
@@ -70,15 +69,14 @@ export class Stream extends EventEmitter {
             ? 1.5 * this.width * this.height
             : ((this.sampleRate * this.bitsPerSample) / 8 / 100) *
               this.channelCount;
-        this.cacheArray = [];
+        this.cache = [];
 
         this.chunk = Buffer.alloc(this.byteLength);
         this.setReadable(readable);
-        this.bindedProcess = this.processData.bind(this);
-        setTimeout(this.bindedProcess, 1);
-        this.broadcast();
+        this.processData();
     }
-    private needed_time() {
+
+    private requiredTime() {
         return this.video ? 0.5 : 50;
     }
 
@@ -97,7 +95,7 @@ export class Stream extends EventEmitter {
             this._finishedLoading = false;
             this._emittedAlmostFinished = false;
             this.readable = readable;
-            this.cacheArray.splice(0, this.cacheArray.length);
+            this.cache.splice(0, this.cache.length);
             this.cacheSize = 0;
             this.playedBytes = 0;
             this.chunk = Buffer.alloc(this.byteLength);
@@ -144,78 +142,86 @@ export class Stream extends EventEmitter {
     }
 
     private dataListener = ((data: Buffer) => {
-        this.cacheArray.push(data);
+        this.cache.push(data);
         this.cacheSize += data.length;
     }).bind(this);
 
     private endListener = (() => {
         this._finishedLoading = true;
     }).bind(this);
-    private isLaggingRemote() {
+
+    private remoteIsLagging() {
         if (
-            this.remotePlayingTime != undefined &&
+            this.remoteTime != undefined &&
             !this.paused &&
             this.remoteLagging != undefined
         ) {
-            const remote_play_time = this.remotePlayingTime().time;
-            const local_play_time = this.currentPlayedTime();
-            if (remote_play_time != undefined && local_play_time != undefined) {
-                if (local_play_time > remote_play_time) {
-                    this.lastDifferenceRemote =
-                        (local_play_time - remote_play_time) * 100000;
+            const time = this.time();
+            const remoteTime = this.remoteTime().time;
+
+            if (time != undefined && remoteTime != undefined) {
+                if (time > remoteTime) {
+                    this.lastDifference = (time - remoteTime) * 100000;
                     return true;
                 } else if (
                     this.remoteLagging().isLagging &&
-                    remote_play_time > local_play_time
+                    remoteTime > time
                 ) {
-                    this.lastDifferenceRemote = 0;
+                    this.lastDifference = 0;
                     return true;
                 }
             }
         }
+
         return false;
     }
-    private processData() {
+
+    private processData = () => {
         if (this._stopped) {
             return;
         }
-        const lagging_remote = this.isLaggingRemote();
-        const timeoutWait = this.frameTime() - this.lastDifferenceRemote;
+
+        const timeout = this.frameTime() - this.lastDifference;
+
         this.checkOverflow();
-        setTimeout(this.bindedProcess, timeoutWait);
+
+        setTimeout(() => this.processData(), timeout);
+
         if (
             !this._paused &&
             !this._finished &&
-            !lagging_remote &&
+            !this.remoteIsLagging() &&
             (this.cacheSize > this.byteLength || this._finishedLoading)
         ) {
             let chunkSize = 0;
 
-            this.cacheArray.find((chunk, i) => {
+            this.cache.find((chunk, i) => {
                 if (chunkSize === 0) {
                     chunk.copy(this.chunk, 0, 0, this.byteLength);
                     chunkSize = Math.min(chunk.length, this.byteLength);
-                    this.cacheArray[i] = chunk.slice(this.byteLength);
+                    this.cache[i] = chunk.slice(this.byteLength);
                 } else {
-                    let req = this.byteLength - chunkSize;
-                    let tmpChunk;
-                    tmpChunk = req < chunk.length ? chunk.slice(0, req) : chunk;
+                    const req = this.byteLength - chunkSize;
+                    const tmpChunk =
+                        req < chunk.length ? chunk.slice(0, req) : chunk;
                     tmpChunk.copy(this.chunk, chunkSize);
                     chunkSize += tmpChunk.length;
-                    this.cacheArray[i] = chunk.slice(req);
+                    this.cache[i] = chunk.slice(req);
                 }
+
                 return chunkSize >= this.byteLength;
             });
 
             this.cacheSize -= this.byteLength;
             // remove empty buffers
-            this.cacheArray.splice(
+            this.cache.splice(
                 0,
-                this.cacheArray.findIndex(i => i.length),
+                this.cache.findIndex(i => i.length),
             );
             this.playedBytes += this.byteLength;
             this.broadcast();
         }
+
         if (!this._finished && this._finishedLoading) {
             if (
                 !this._emittedAlmostFinished &&
@@ -229,10 +235,10 @@ export class Stream extends EventEmitter {
                 this.finish();
             }
         }
-    }
+    };
 
     private checkOverflow() {
-        if (this.cacheSize > this.byteLength * this.needed_time() * 50) {
+        if (this.cacheSize > this.byteLength * this.requiredTime() * 50) {
             if (!this.readable!.isPaused()) {
                 if (typeof this.overflowCallback === 'function') {
                     this.overflowCallback(true);
@@ -240,7 +246,7 @@ export class Stream extends EventEmitter {
                 this.readable!.pause();
             }
         } else if (
-            this.cacheSize < this.byteLength * this.needed_time() * 25 &&
+            this.cacheSize < this.byteLength * this.requiredTime() * 25 &&
             this.readable!.isPaused()
         ) {
             if (typeof this.overflowCallback === 'function') {
@@ -254,8 +260,9 @@ export class Stream extends EventEmitter {
         if (this._finishedLoading) {
             return false;
         }
-        return this.cacheSize < this.byteLength * this.needed_time();
+        return this.cacheSize < this.byteLength * this.requiredTime();
     }
+
     private frameTime(): number {
         return this.finished ||
             this.paused ||
@@ -266,8 +273,12 @@ export class Stream extends EventEmitter {
             ? 1000 / this.framerate
             : 10;
     }
-    broadcast() {
-        if (this.cacheSize < this.byteLength) return;
+
+    private broadcast() {
+        if (this.cacheSize < this.byteLength) {
+            return;
+        }
+
         try {
             if (this.video) {
                 this.videoSource.onFrame({
@@ -291,7 +302,8 @@ export class Stream extends EventEmitter {
             this.emit('error', error);
         }
     }
-    currentPlayedTime(): number | undefined {
+
+    time(): number | undefined {
         if (this.readable === undefined || this.finished) {
             return undefined;
         } else {
