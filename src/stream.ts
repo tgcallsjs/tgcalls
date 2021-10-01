@@ -253,17 +253,18 @@ export class Stream extends EventEmitter {
         }
     }
 
-    public checkLag() {
+    public isLagging() {
         if (this._finishedLoading) {
             return false;
         }
+
         return this.cacheSize < this.byteLength * this.requiredTime();
     }
 
     private frameTime(): number {
         return this.finished ||
             this.paused ||
-            this.checkLag() ||
+            this.isLagging() ||
             this.readable === undefined
             ? 500
             : this.video
