@@ -41,6 +41,7 @@ export class Stream extends EventEmitter {
     private cacheSize: number = 0;
     private playedBytes = 0;
     private chunk: Buffer;
+    private _readablePaused = false;
     remoteTime?: RemotePlayingTimeCallback;
     remoteLagging?: RemoteLaggingCallback;
     overflowCallback?: (pause: boolean) => void;
@@ -235,21 +236,17 @@ export class Stream extends EventEmitter {
     };
 
     private checkOverflow() {
-        if (this.cacheSize > this.byteLength * this.requiredTime() * 50) {
-            if (!this.readable!.isPaused()) {
-                if (typeof this.overflowCallback === 'function') {
-                    this.overflowCallback(true);
-                }
+        const frameTime = this.video ? this.framerate : 100;
+        const cachedTime = this.cacheSize / this.byteLength / frameTime;
+        const neededTime = this.video ? 5 : 60;
+        if (cachedTime > neededTime) {
+            if (!this._readablePaused) {
                 this.readable!.pause();
+                this._readablePaused = true;
             }
-        } else if (
-            this.cacheSize < this.byteLength * this.requiredTime() * 25 &&
-            this.readable!.isPaused()
-        ) {
-            if (typeof this.overflowCallback === 'function') {
-                this.overflowCallback(false);
-            }
+        } else if (cachedTime < neededTime / 2 && this._readablePaused) {
             this.readable!.resume();
+            this._readablePaused = false;
         }
     }
 
