@@ -102,8 +102,8 @@ export class Stream extends EventEmitter {
     }
 
     stop() {
-        this.finish();
         this._stopped = true;
+        this.finish();
     }
 
     get stopped() {
