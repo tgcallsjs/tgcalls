@@ -43,7 +43,6 @@ export class Stream extends EventEmitter {
 
     remoteTime?: RemotePlayingTimeCallback;
     remoteLagging?: RemoteLaggingCallback;
-    overflowCallback?: (pause: boolean) => void;
 
     constructor(readable?: Readable, options?: StreamOptions) {
         super();
