@@ -19,7 +19,6 @@ export class Stream extends EventEmitter {
     private readonly audioSource: RTCAudioSource;
     private readonly videoSource: RTCVideoSource;
     private readable?: Readable;
-
     private cache: Buffer[];
 
     private _paused = false;
@@ -41,6 +40,7 @@ export class Stream extends EventEmitter {
     private playedBytes = 0;
     private chunk: Buffer;
     private _readablePaused = false;
+
     remoteTime?: RemotePlayingTimeCallback;
     remoteLagging?: RemoteLaggingCallback;
     overflowCallback?: (pause: boolean) => void;
@@ -152,14 +152,14 @@ export class Stream extends EventEmitter {
 
     private remoteIsLagging() {
         if (
-            this.remoteTime != undefined &&
+            this.remoteTime !== undefined &&
             !this.paused &&
-            this.remoteLagging != undefined
+            this.remoteLagging !== undefined
         ) {
             const time = this.time();
             const remoteTime = this.remoteTime().time;
 
-            if (time != undefined && remoteTime != undefined) {
+            if (time !== undefined && remoteTime !== undefined) {
                 if (time > remoteTime) {
                     this.lastDifference = (time - remoteTime) * 100000;
                     return true;
