@@ -1,6 +1,5 @@
 import { EventEmitter } from 'events';
 import { Readable } from 'stream';
-// @ts-ignore
 import { RTCVideoSource, RTCAudioSource, nonstandard } from 'wrtc';
 import {
     RemotePlayingTimeCallback,
